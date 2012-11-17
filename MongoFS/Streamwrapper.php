@@ -1,94 +1,107 @@
 <?php
-/*
-  +---------------------------------------------------------------------------------+
-  | Copyright (c) 2010 ActiveMongo                                                  |
-  +---------------------------------------------------------------------------------+
-  | Redistribution and use in source and binary forms, with or without              |
-  | modification, are permitted provided that the following conditions are met:     |
-  | 1. Redistributions of source code must retain the above copyright               |
-  |    notice, this list of conditions and the following disclaimer.                |
-  |                                                                                 |
-  | 2. Redistributions in binary form must reproduce the above copyright            |
-  |    notice, this list of conditions and the following disclaimer in the          |
-  |    documentation and/or other materials provided with the distribution.         |
-  |                                                                                 |
-  | 3. All advertising materials mentioning features or use of this software        |
-  |    must display the following acknowledgement:                                  |
-  |    This product includes software developed by César D. Rodas.                  |
-  |                                                                                 |
-  | 4. Neither the name of the César D. Rodas nor the                               |
-  |    names of its contributors may be used to endorse or promote products         |
-  |    derived from this software without specific prior written permission.        |
-  |                                                                                 |
-  | THIS SOFTWARE IS PROVIDED BY CÉSAR D. RODAS ''AS IS'' AND ANY                   |
-  | EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED       |
-  | WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE          |
-  | DISCLAIMED. IN NO EVENT SHALL CÉSAR D. RODAS BE LIABLE FOR ANY                  |
-  | DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES      |
-  | (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;    |
-  | LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND     |
-  | ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT      |
-  | (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS   |
-  | SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE                     |
-  +---------------------------------------------------------------------------------+
-  | Authors: César Rodas <crodas@php.net>                                           |
-  +---------------------------------------------------------------------------------+
-*/
+/**
+ * +---------------------------------------------------------------------------------+
+ * | Copyright (c) 2010 ActiveMongo                                                  |
+ * +---------------------------------------------------------------------------------+
+ * | Redistribution and use in source and binary forms, with or without              |
+ * | modification, are permitted provided that the following conditions are met:     |
+ * | 1. Redistributions of source code must retain the above copyright               |
+ * |    notice, this list of conditions and the following disclaimer.                |
+ * |                                                                                 |
+ * | 2. Redistributions in binary form must reproduce the above copyright            |
+ * |    notice, this list of conditions and the following disclaimer in the          |
+ * |    documentation and/or other materials provided with the distribution.         |
+ * |                                                                                 |
+ * | 3. All advertising materials mentioning features or use of this software        |
+ * |    must display the following acknowledgement:                                  |
+ * |    This product includes software developed by César D. Rodas.                  |
+ * |                                                                                 |
+ * | 4. Neither the name of the César D. Rodas nor the                               |
+ * |    names of its contributors may be used to endorse or promote products         |
+ * |    derived from this software without specific prior written permission.        |
+ * |                                                                                 |
+ * | THIS SOFTWARE IS PROVIDED BY CÉSAR D. RODAS ''AS IS'' AND ANY                   |
+ * | EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED       |
+ * | WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE          |
+ * | DISCLAIMED. IN NO EVENT SHALL CÉSAR D. RODAS BE LIABLE FOR ANY                  |
+ * | DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES      |
+ * | (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;    |
+ * | LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND     |
+ * | ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT      |
+ * | (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS   |
+ * | SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE                     |
+ * +---------------------------------------------------------------------------------+
+ *
+ * @author   César Rodas <crodas@php.net>
+ * @author   Marco Graetsch <magdev3.0@googlemail.com>
+ * @link     https://github.com/magdev/MongoFS
+ * @package  MongoFS
+ * @license  http://opensource.org/licenses/BSD-3-Clause BSD License
+ */
+namespace MongoFS;
 
-class MongoFS
-{   
+
+/**
+ * Streamwrapper for MongoDB GridFS (PHP 5.3+ port)
+ *
+ * @author crodas
+ * @author magdev
+ */
+class Streamwrapper
+{
     /* constants {{{ */
-    const OP_READ=1;
-    const OP_READWRITE=2;
-    const OP_WRITE=3;
-    const OP_APPEND=4;
-    const E_EXCEPTION=1;
-    const E_USER_ERROR=2;
+    const OP_READ        = 1;
+    const OP_READWRITE   = 2;
+    const OP_WRITE       = 3;
+    const OP_APPEND      = 4;
+    const E_EXCEPTION    = 1;
+    const E_USER_ERROR   = 2;
     /* }}} */
 
     // static properties {{{
-    /** 
-     *  Current databases objects
+    /**
+     * Current databases objects
      *
-     *  @type array
+     * @var array
      */
     private static $_dbs;
+    
     /**
-     *  Current connection to MongoDB
+     * Current connection to MongoDB
      *
-     *  @type MongoConnection
+     * @var \MongoConnection
      */
     private static $_conn;
+    
     /**
-     *  Database name
+     * Database name
      *
-     *  @type string
+     * @var string
      */
     private static $_db;
+    
     /**
-     *  Host name
+     * Host name
      *
-     *  @type string
+     * @var string
      */
     private static $_host;
 
  	/**
-     *  User (Auth)
+     * User (Auth)
      *
-     *  @type string
+     * @var string
      */
     private static $_user;
 
-        /**
-     *  Password (Auth)
+    /**
+     * Password (Auth)
      *
-     *  @type string
+     * @var string
      */
     private static $_pwd;
-
-
-
     // }}}
+    
 
     /* file metadata */
     protected $filename;
@@ -106,7 +119,7 @@ class MongoFS
     /* offsets */
     protected $offset;
 
-    /* mongo infromation */
+    /* mongo information */
     protected $grid;
     protected $chunks;
     protected $chunk;
@@ -118,33 +131,52 @@ class MongoFS
 
     // void connection($db, $host) {{{
     /**
-     *  Connect
+     * Connect
      *
-     *  This method setup parameters to connect to a MongoDB
-     *  database. The connection is done when it is needed.
+     * This method setup parameters to connect to a MongoDB
+     * database. The connection is done when it is needed.
      *
-     *  @param string $db   Database name
-     *  @param string $host Host to connect
-     *
-     *  @return void
+     * @param string $db   Database name
+     * @param string $host Host to connect
+     * @param string $user MongoDB-User
+     * @param string $pwd  MongoDB-Password
+     * @return void
      */
-    final public static function connect($db, $host='localhost', $user = null, $pwd=null)
+    final public static function connect($db, $host = 'localhost', $user = null, $pwd = null)
     {
         self::$_host = $host;
         self::$_db   = $db;
      	self::$_user = $user;
-        self::$_pwd   = $pwd;
+        self::$_pwd  = $pwd;
+    }
+    // }}}
 
+    // storeFile($filename, $name) {{{
+    /**
+     * Simple wrap to the native "storeFile" method
+     *
+     * @param string $filename File to upload
+     * @param string $name     Name for the uploaded file
+     * @return \MongoId
+     */
+    public static function uploadFile($filename, $name = null)
+    {
+        if ($name == null) {
+            $name = basename($filename);
+        }
+        $f = new Streamwrapper();
+        $db = $f->_getConnection();
+        return $db->getGridFS()->storeFile($filename, array('filename' => $name));
     }
     // }}}
 
     // MongoConnection _getConnection() {{{
     /**
-     *  Get Connection
+     * Get Connection
      *
-     *  Get a valid database connection
+     * Get a valid database connection
      *
-     *  @return MongoConnection
+     * @return \MongoConnection
      */
     final protected function _getConnection()
     {
@@ -152,18 +184,15 @@ class MongoFS
             if (is_null(self::$_host)) {
                 self::$_host = 'localhost';
             }
-            self::$_conn = new Mongo(self::$_host);
+            self::$_conn = new \Mongo(self::$_host);
         }
         $dbname = self::$_db;
-        if (!isSet(self::$_dbs[$dbname])) {
+        if (!isset(self::$_dbs[$dbname])) {
             self::$_dbs[$dbname] = self::$_conn->selectDB($dbname);
         }
 
-        if ( !is_null(self::$_user ) &&   !is_null(self::$_pwd )  ) {
-        	
-         	self::$_dbs[$dbname]->authenticate(	self::$_user,self::$_pwd ) ;
-
-
+        if (!is_null(self::$_user) && !is_null(self::$_pwd)) {
+         	self::$_dbs[$dbname]->authenticate(self::$_user, self::$_pwd);
         }
         return self::$_dbs[$dbname];
     }
@@ -171,17 +200,18 @@ class MongoFS
 
     // void set_error(string $error) {{{
     /**
-     *  set_error($error)
+     * set_error($error)
      *
-     *  Report a given error by the selected method. By
-     *  default it would throw an exception, but it can be
-     *  changed to generate a PHP Error.
-     *  
+     * Report a given error by the selected method. By
+     * default it would throw an exception, but it can be
+     * changed to generate a PHP Error.
+     *
+     * @throws \Exception
      */
     final protected function set_error($error)
     {
         if (self::$_err_reporting == self::E_EXCEPTION) {
-            throw new Exception($error);
+            throw new \Exception($error);
         } else {
             trigger_error($error);
         }
@@ -190,11 +220,13 @@ class MongoFS
 
     // bool set_openmode(string $mode_str) {{{
     /**
-     *  set_openmode
+     * set_openmode
      *
-     *  This methods parses and validates the 'mode'
-     *  in which the current file is opened.
+     * This methods parses and validates the 'mode'
+     * in which the current file is opened.
      *
+     * @param string $mode_str
+     * @return boolean
      */
     final protected function set_openmode($mode_str)
     {
@@ -267,71 +299,16 @@ class MongoFS
     }
     // }}}
 
-    // bool stream_open(string $filename, int $mode) {{{
-    final public function stream_open($filename, $mode)
-    {
-        /* Parse $mode */
-        if (!$this->set_openmode($mode)) {
-            return false;
-        }
-
-        /* Open file or create */
-        if (!$this->mongo_fs_open($filename)) {
-            return false;
-        }
-
-        /* Set initial fp position */
-        if (!$this->stream_seek(0, $this->mode==self::OP_APPEND ? SEEK_END : SEEK_SET)) {
-            $this->set_error("Initial offset falied");
-            return false;
-        }
-
-        /* succeed */
-        return true;
-    }
-    // }}}
-
-    // stream_read(int $bytes) {{{
-    /**
-     *  stream_read
-     *
-     */
-    final function stream_read($bytes)
-    {
-        $cache      = & $this->cache;
-        $offset     = & $this->cache_offset; 
-        $chunk_size = $this->chunk_size;
-        $cache_size = & $this->cache_size;
-        $data       = "";
-
-        if ($offset + $bytes >= $chunk_size) {
-            $data  .= substr($cache, $offset);
-            $bytes -= strlen($data);
-            $this->stream_seek($chunk_size * ($this->chunk_id+1), SEEK_SET);
-        }
-
-        if ($bytes > 0) {
-            $data  .= substr($cache, $offset, $bytes);
-            $bytes = strlen($data);
-            $offset       += $bytes; 
-            $this->offset += $bytes;
-        }
-
-        return $data;
-    }
-    // }}}
-
     // bool mongo_fs_open($filename) {{{
     /**
-     *  Open a File stored on MongoDB
+     * Open a File stored on MongoDB
      *
-     *  This method opens a file stored on MongoDB, 
-     *  if the file doesn't exists and  it is opened
-     *  in write or append mode an empty file is created
+     * This method opens a file stored on MongoDB,
+     * if the file doesn't exists and  it is opened
+     * in write or append mode an empty file is created
      *
-     *  @param filename
-     *
-     *  @return bool
+     * @param string $filename
+     * @return boolean
      */
     protected function mongo_fs_open($filename)
     {
@@ -385,19 +362,19 @@ class MongoFS
         }
 
         /* Load file metadata. */
-        $this->filename  = $attr->file['filename'];
-        $this->size      = $attr->file['length'];
+        $this->filename   = $attr->file['filename'];
+        $this->size       = $attr->file['length'];
         $this->chunk_size = $attr->file['chunkSize'];
-        $this->file_id   = $attr->file['_id'];
+        $this->file_id    = $attr->file['_id'];
 
 
         /* load grid and chunks references */
-        $this->grid     = $grid;
-        $this->chunks   = $grid->chunks; 
-        $this->cursor   = $this->chunks->find(array("files_id" => $this->file_id));
-        $this->chunk_id = -1;
-        $this->offset   = 0;
-        $this->cache_offset = 0; 
+        $this->grid         = $grid;
+        $this->chunks       = $grid->chunks;
+        $this->cursor       = $this->chunks->find(array("files_id" => $this->file_id));
+        $this->chunk_id     = -1;
+        $this->offset       = 0;
+        $this->cache_offset = 0;
         $this->total_chunks = $this->cursor->count();
 
 
@@ -405,10 +382,78 @@ class MongoFS
     }
     // }}}
 
+    // bool stream_open(string $filename, int $mode) {{{
+    /**
+     * stream_open
+     *
+     * @param string $filename Filename
+     * @param string $mode     Openmode
+     * @return boolean
+     * @see \streamWrapper::stream_open()
+     */
+    final public function stream_open($filename, $mode)
+    {
+        /* Parse $mode */
+        if (!$this->set_openmode($mode)) {
+            return false;
+        }
+
+        /* Open file or create */
+        if (!$this->mongo_fs_open($filename)) {
+            return false;
+        }
+
+        /* Set initial fp position */
+        if (!$this->stream_seek(0, $this->mode == self::OP_APPEND ? SEEK_END : SEEK_SET)) {
+            $this->set_error("Initial offset falied");
+            return false;
+        }
+
+        /* succeed */
+        return true;
+    }
+    // }}}
+
+    // stream_read(int $bytes) {{{
+    /**
+     * stream_read
+     *
+     * @return string
+     * @see \streamWrapper::stream_read()
+     */
+    final function stream_read($bytes)
+    {
+        $cache      = & $this->cache;
+        $offset     = & $this->cache_offset;
+        $chunk_size = $this->chunk_size;
+        $cache_size = & $this->cache_size;
+        $data       = "";
+
+        if ($offset + $bytes >= $chunk_size) {
+            $data  .= substr($cache, $offset);
+            $bytes -= strlen($data);
+            $this->stream_seek($chunk_size * ($this->chunk_id+1), SEEK_SET);
+        }
+
+        if ($bytes > 0) {
+            $data   .= substr($cache, $offset, $bytes);
+            $bytes   = strlen($data);
+            $offset += $bytes;
+            $this->offset += $bytes;
+        }
+
+        return $data;
+    }
+    // }}}
+
     // int stream_seek($offset, $whence) {{{
     /**
+     * stream_seek
      *
-     *
+     * @param int $offset
+     * @param int $whence
+     * @return boolean
+     * @see \streamWrapper::stream_seek()
      */
     final public function stream_seek($offset, $whence)
     {
@@ -416,7 +461,7 @@ class MongoFS
         if ($this->mode != self::OP_READ) {
             /* We might want go to the next new chunk */
             $size += 1;
-            if ($this->chunk==null) {
+            if ($this->chunk == null) {
                 /* if the current chunk is not synced */
                 /* yet we might want to move to the next chunk */
                 /* (of course this function call flush() ) */
@@ -478,7 +523,7 @@ class MongoFS
                 $this->cache_size = strlen($this->cache);
             }
             /* New Chunk ID */
-            $this->chunk_id = $chunk_new; 
+            $this->chunk_id = $chunk_new;
         }
         $this->cache_offset = $offset%$this->chunk_size;
         $this->offset       = $offset;
@@ -489,10 +534,14 @@ class MongoFS
 
     // bool stream_flush() {{{
     /**
-     *  If the file is opened in write mode and the 
-     *  IO cache had changed this function will put 
-     *  replace the file chunk at MongoDB.
+     * stream_flush
      *
+     * If the file is opened in write mode and the
+     * IO cache had changed this function will put
+     * replace the file chunk at MongoDB.
+     *
+     * @return boolean
+     * @see \streamWrapper::stream_flush()
      */
     final function stream_flush()
     {
@@ -502,15 +551,15 @@ class MongoFS
 
         if ($this->chunk_id < 0 || !$this->cache_dirty) {
             return true;
-        } 
+        }
 
         $cache = substr($this->cache, 0, $this->cache_size);
 
         if ($this->chunk == null) {
             $document = array(
                 'files_id' => $this->file_id,
-                'n' => $this->chunk_id,
-                'data' => new MongoBinData($cache),
+                'n'        => $this->chunk_id,
+                'data'     => new \MongoBinData($cache),
             );
 
             /* save the current chunk */
@@ -521,7 +570,7 @@ class MongoFS
         } else {
             $document = array(
                 '$set' => array(
-                    'data' => new MongoBinData($cache),
+                    'data' => new \MongoBinData($cache),
                 ),
             );
             $filter = array(
@@ -544,12 +593,14 @@ class MongoFS
 
     // stream_close() {{{
     /**
-     *  fclose($fp):
+     * fclose($fp):
      *
-     *  This close the current file, also if the file is opened in 
-     *  write, append or read/write mode, and the file had changed
-     *  it would regenerate the md5 checksum and update it
+     * This close the current file, also if the file is opened in
+     * write, append or read/write mode, and the file had changed
+     * it would regenerate the md5 checksum and update it
      *
+     * @return boolean
+     * @see \streamWrapper::stream_close()
      */
     final function stream_close()
     {
@@ -558,15 +609,15 @@ class MongoFS
         }
         $this->stream_flush();
         $command = array(
-            "filemd5" => $this->file_id, 
-            "root" => "fs",
+            "filemd5" => $this->file_id,
+            "root"    => "fs",
         );
-        $result = $this->_getConnection()->command( $command );
+        $result = $this->_getConnection()->command($command);
 
         if (true) {
             /* silly test to see if we count the size correctly */
             /* when it becames more stable I'll remove it */
-            $size = $this->chunks->group(array(), array("size" => 0), new MongoCode("function (b,a) { a.size += b.data.len-4; }"), array("files_id" => $this->file_id)); 
+            $size = $this->chunks->group(array(), array("size" => 0), new \MongoCode("function (b,a) { a.size += b.data.len-4; }"), array("files_id" => $this->file_id));
 
             if ($size['retval'][0]['size'] != $this->size) {
                 print_r(array($size['retval'][0]['size'], $this->size));
@@ -581,7 +632,7 @@ class MongoFS
         $document = array(
             '$set' => array(
                 'length' => $this->size,
-                'md5' => $result['md5'],
+                'md5'    => $result['md5'],
             ),
         );
 
@@ -592,7 +643,11 @@ class MongoFS
 
     // stream_write($data) {{{
     /**
-     *  Write into $data in the current file
+     * Write into $data in the current file
+     *
+     * @param string $data
+     * @return boolean
+     * @see \streamWrapper::stream_write()
      */
     final function stream_write($data)
     {
@@ -601,7 +656,7 @@ class MongoFS
             return false;
         }
         $cache      = & $this->cache;
-        $offset     = & $this->cache_offset; 
+        $offset     = & $this->cache_offset;
         $chunk_size = $this->chunk_size;
         $cache_size = & $this->cache_size;
         $data_size  = strlen($data);
@@ -622,7 +677,7 @@ class MongoFS
             /* Move to the next chunk, stream_seek */
             /* will automatically sync it to mongodb */
             if (!$this->stream_seek($chunk_size * ($this->chunk_id+1), SEEK_SET)) {
-                throw new MongoException("Offset falied");
+                throw new \MongoException("Offset falied");
             }
 
             if ($wrote > 0) {
@@ -637,7 +692,7 @@ class MongoFS
             $left    = substr($cache, 0, $offset);
             $right   = substr($cache, $offset + $data_size);
             $cache   = $left.$data.$right;
-            $offset += $data_size; 
+            $offset += $data_size;
             $wrote  += $data_size;
             $this->offset += $data_size;
         }
@@ -652,7 +707,10 @@ class MongoFS
 
     // stream_tell() {{{
     /**
-     *  Return the current file pointer position
+     * Return the current file pointer position
+     *
+     * @return int
+     * @see \streamWrapper::stream_tell()
      */
     final function stream_tell()
     {
@@ -662,7 +720,10 @@ class MongoFS
 
     // stream_eof() {{{
     /**
-     *  Tell if the file pointer is at the end
+     * Tell if the file pointer is at the end
+     *
+     * @return boolean
+     * @see \streamWrapper::stream_eof()
      */
     final function stream_eof()
     {
@@ -672,7 +733,10 @@ class MongoFS
 
     // stream_fstat() {{{
     /**
-     *  Return stat info about the current file
+     * Return stat info about the current file
+     *
+     * @return array
+     * @see \streamWrapper::stream_stat()
      */
     final function stream_stat()
     {
@@ -684,7 +748,10 @@ class MongoFS
 
     // unlink($file) {{{
     /**
-     *  Remove the given file
+     * Remove the given file
+     *
+     * @return boolean
+     * @see \streamWrapper::unlink()
      */
     final function unlink($file)
     {
@@ -702,28 +769,17 @@ class MongoFS
         return true;
     }
     // }}}
-
-    // storeFile($filename, $name) {{{
+    
+    // url_stat($file, $flags) {{{
     /**
-     *  Simple wrap to the native "storeFile" method
+     * url_stat
      *
-     *  @param string $filename File to upload
-     *  @param string $name     Name for the uploaded file
-     *
-     *  @return 
+     * @param string $file
+     * @param int    $flags
+     * @return array
+     * @see \streamWrapper::url_stat()
      */
-    public static function uploadFile($filename, $name=null) 
-    {
-        if ($name == null) {
-            $name = basename($filename);
-        }
-        $f = new ActiveMongoFS;
-        $db = $f->_getConnection();
-        return $db->getGridFS()->storeFile($filename, array('filename' => $name));
-    }
-    // }}}
-
-    function url_stat($file)
+    public function url_stat($file, $flags)
     {
         /* Set a fake mode, in order to see if the file exists */
         $this->mode = self::OP_READ;
@@ -734,11 +790,12 @@ class MongoFS
         }
         return $this->stream_stat();
     }
+    // }}}
 
 }
 
 /* Register the STREAM class */
-stream_wrapper_register("gridfs", "MongoFS")
+stream_wrapper_register("gridfs", "MongoFS\Streamwrapper")
     or die("Failed to register protocol");
 
 /*
