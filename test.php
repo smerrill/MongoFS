@@ -35,10 +35,12 @@
   +---------------------------------------------------------------------------------+
 */
 
-require "MongoFS.php";
+use MongoFS\Streamwrapper;
+
+require "MongoFS/Streamwrapper.php";
 
 /* Ejemplo */
-MongoFS::connect("mongofs", "localhost");
+MongoFS\Streamwrapper::connect("mongofs", "localhost");
 
 define("RAND_OPERATIONS", 30000);
 
@@ -111,7 +113,7 @@ function partial_reading($file1, $file2)
         $data1 = fread($fp, $bytes);
         $data2 = fread($fi, $bytes);
         if ($data1 !== $data2) {
-            throw new Exception("File mismatch at position $offset");
+            throw new \Exception("File mismatch at position $offset");
         }
     }
     fclose($fp);
@@ -129,7 +131,7 @@ function partial_writing($file1, $file2)
 
     for ($i=0; $i < RAND_OPERATIONS; $i++) {
         /* random offset */
-        $offset = rand(0, $max); 
+        $offset = rand(0, $max);
         fseek($fp, $offset, SEEK_SET);
         fseek($fi, $offset, SEEK_SET);
        
@@ -155,7 +157,7 @@ function stream_cmp($file1, $file2, $bytes = 8096)
     $size1 = filesize($file1);
     $size2 = filesize($file2);
     if ($size1 != $size2) {
-        throw new Exception("file size mismatch {$size1} != {$size2}");
+        throw new \Exception("file size mismatch {$size1} != {$size2}");
     }
 
     $f1 = fopen($file1, "r");
@@ -171,7 +173,7 @@ function stream_cmp($file1, $file2, $bytes = 8096)
                 }
             }
             var_dump(array($data1, $data2));
-            throw new exception("File mismatch at position ".(ftell($f1)+$i));
+            throw new \Exception("File mismatch at position ".(ftell($f1)+$i));
         }
     }
 
@@ -180,7 +182,7 @@ function stream_cmp($file1, $file2, $bytes = 8096)
         //throw new Exception("Unexpected offset error");
     }
     if (sha1_file($file1) !== sha1_file($file2)) {
-        throw new Exception("SHA1 mismatch");
+        throw new \Exception("SHA1 mismatch");
     }
     fclose($f2);
     fclose($f1);
@@ -194,7 +196,7 @@ function generate_test_file()
     $fname = tempnam("/tmp/", "mongofs");
     $fp    = fopen($fname, "w");
     if (!$fp) {
-        throw new Exception("Error while creating testing file");
+        throw new \Exception("Error while creating testing file");
     }
     $size = rand(40000, 1000000);
     for ($i=0; $i < $size; $i++) {
