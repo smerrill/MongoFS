@@ -559,18 +559,18 @@ class Streamwrapper
             $document = array(
                 'files_id' => $this->file_id,
                 'n'        => $this->chunk_id,
-                'data'     => new \MongoBinData($cache),
+                'data'     => new \MongoBinData($cache, \MongoBinData::BYTE_ARRAY),
             );
 
             /* save the current chunk */
-            $this->chunks->insert($document, true);
+            $this->chunks->insert($document, array("w" => 1));
             $this->chunk = $document;
             
             $this->size += $this->cache_size;
         } else {
             $document = array(
                 '$set' => array(
-                    'data' => new \MongoBinData($cache),
+                    'data' => new \MongoBinData($cache, \MongoBinData::BYTE_ARRAY),
                 ),
             );
             $filter = array(
@@ -617,7 +617,7 @@ class Streamwrapper
         if (true) {
             /* silly test to see if we count the size correctly */
             /* when it becames more stable I'll remove it */
-            $size = $this->chunks->group(array(), array("size" => 0), new \MongoCode("function (b,a) { a.size += b.data.len-4; }"), array("files_id" => $this->file_id));
+            $size = $this->chunks->group(array(), array("size" => 0), new \MongoCode("function (b,a) { a.size += b.data.len-4; }"), array("condition" => array("files_id" => $this->file_id)));
 
             if ($size['retval'][0]['size'] != $this->size) {
                 print_r(array($size['retval'][0]['size'], $this->size));
